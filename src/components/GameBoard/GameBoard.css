@@ -1,0 +1,28 @@
+.board-wrap {
+    display: grid;
+    place-items: center;
+    align-self: center;
+    width: 100%;
+    overflow: visible;
+}
+
+.game-board {
+    display: grid;
+    grid-template-columns: repeat(var(--grid-size), var(--cell-size));
+    grid-template-rows: repeat(var(--grid-size), var(--cell-size));
+    gap: 4px;
+    overflow: hidden;
+    border: 9px solid #ffffff;
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: var(--shadow-soft);
+    touch-action: manipulation;
+}
+
+@media (max-width: 420px) {
+    .game-board {
+        gap: 3px;
+        border-width: 7px;
+        border-radius: 11px;
+    }
+}

@@ -1,0 +1,41 @@
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(47, 42, 36, 0.34);
+  backdrop-filter: blur(8px);
+  z-index: 10;
+}
+
+.game-modal {
+  width: min(100%, 420px);
+  border: 1px solid rgba(47, 42, 36, 0.1);
+  border-radius: var(--radius-lg);
+  padding: clamp(1.25rem, 4vw, 1.75rem);
+  text-align: center;
+  background: var(--color-surface-strong);
+  box-shadow: var(--shadow-soft);
+}
+
+.game-modal h2 {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.45rem, 5vw, 2rem);
+}
+
+.game-modal p {
+  margin: 0;
+  color: var(--color-muted);
+  line-height: 1.5;
+}
+
+.game-modal__actions {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 1.25rem;
+}
+
+.button-secondary {
+  background: #f1e5d8;
+}

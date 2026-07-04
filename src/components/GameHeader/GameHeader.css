@@ -1,0 +1,45 @@
+.game-header {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: clamp(0.75rem, 3vw, 1.25rem);
+    color: var(--color-text);
+}
+
+.game-header__info {
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+    justify-content: center;
+    gap: clamp(1.6rem, 8vw, 3.5rem);
+    text-align: center;
+}
+
+.game-header__metric {
+    display: grid;
+    gap: 0.05rem;
+}
+
+.game-header__metric span {
+    color: var(--color-text);
+    font-size: clamp(1.05rem, 4.6vw, 1.45rem);
+    font-weight: 500;
+    line-height: 1;
+}
+
+.game-header__metric strong {
+    color: var(--color-strong);
+    font-size: clamp(1.45rem, 6vw, 2rem);
+    line-height: 1;
+}
+
+.icon-button {
+    display: inline-grid;
+    place-items: center;
+    width: clamp(48px, 11vw, 58px);
+    height: clamp(48px, 11vw, 58px);
+    padding: 0;
+    color: var(--color-text);
+    background: #ffffff;
+    box-shadow: var(--shadow-button);
+    font-size: 1.45rem;
+}

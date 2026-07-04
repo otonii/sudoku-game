@@ -1,0 +1,77 @@
+.game-cell {
+    display: grid;
+    place-items: center;
+    width: var(--cell-size);
+    height: var(--cell-size);
+    min-width: 0;
+    border-style: solid;
+    border-color: var(--color-grid-line);
+    border-radius: 6px;
+    padding: 0;
+    color: var(--color-text);
+    box-shadow: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.game-cell:hover:not(:disabled) {
+    transform: none;
+    box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0.18);
+}
+
+.game-cell:disabled {
+    opacity: 1;
+}
+
+.cell-mark {
+    font-size: calc(var(--cell-size) * 0.82);
+    line-height: 0.8;
+    font-weight: 900;
+}
+
+.cell-mark--note {
+    color: rgba(255, 255, 255, 0.92);
+    text-shadow: 0 1px 4px rgba(99, 76, 65, 0.18);
+}
+
+.cell-mark--error {
+    color: var(--color-error);
+    text-shadow: 0 1px 5px rgba(255, 255, 255, 0.55);
+    animation: cell-shake 220ms ease;
+}
+
+.cell-cat {
+    display: grid;
+    place-items: center;
+    width: calc(var(--cell-size) * 0.72);
+    height: calc(var(--cell-size) * 0.72);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.72);
+    font-size: calc(var(--cell-size) * 0.5);
+    line-height: 1;
+    animation: cat-pop 220ms ease-out;
+}
+
+@keyframes cat-pop {
+    from {
+        transform: scale(0.4) rotate(-10deg);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1) rotate(0);
+        opacity: 1;
+    }
+}
+
+@keyframes cell-shake {
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-3px);
+    }
+    75% {
+        transform: translateX(3px);
+    }
+}
