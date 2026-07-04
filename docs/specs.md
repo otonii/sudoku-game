@@ -382,6 +382,8 @@ Características:
 
 - Regiões sinuosas.
 - Regiões que se entrelaçam ou abraçam outras regiões.
+- Exatamente 4 regiões concentradas para criar pontos iniciais de dedução.
+- Pelo menos 2 regiões concentradas devem compartilhar linha ou coluna.
 - Uma mesma região pode passar por 4 ou 5 linhas/colunas diferentes.
 - O jogador precisa cruzar informações de múltiplas regiões antes de usar o clique duplo.
 
@@ -526,9 +528,11 @@ Ao aplicar `X_VERMELHO`:
 - Regiões com mais de `2N - 2` células são rejeitadas.
 - Regiões que ocupam mais de `60%` de uma linha são rejeitadas.
 - Regiões que ocupam mais de `60%` de uma coluna são rejeitadas.
-- Regiões em formato de retângulo perfeito são rejeitadas.
+- Regiões em formato de retângulo perfeito são rejeitadas, exceto quando forem regiões concentradas intencionais.
 - Níveis fáceis priorizam regiões compactas.
 - Níveis difíceis priorizam regiões sinuosas e entrelaçadas.
+- Níveis hard possuem exatamente 4 regiões concentradas.
+- Em níveis hard, pelo menos 2 regiões concentradas compartilham linha ou coluna.
 
 ## 15. Fora de escopo inicial
 
