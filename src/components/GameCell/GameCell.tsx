@@ -1,27 +1,20 @@
 import type { Cell } from "../../domain/gameTypes";
-import type { CellBorders } from "../../utils/coordinates";
+
 import "./GameCell.css";
 
 type GameCellProps = {
   cell: Cell;
   disabled: boolean;
-  borders: CellBorders;
   onInput: (row: number, column: number) => void;
 };
 
-export function GameCell({ cell, disabled, borders, onInput }: GameCellProps) {
+export function GameCell({ cell, disabled, onInput }: GameCellProps) {
   const label = getAriaLabel(cell);
 
   return (
     <button
       className="game-cell"
-      style={{
-        backgroundColor: cell.regionColor,
-        borderTopWidth: borders.top === "thick" ? 3 : 1,
-        borderRightWidth: borders.right === "thick" ? 3 : 1,
-        borderBottomWidth: borders.bottom === "thick" ? 3 : 1,
-        borderLeftWidth: borders.left === "thick" ? 3 : 1,
-      }}
+      style={{ backgroundColor: cell.regionColor }}
       type="button"
       disabled={disabled}
       data-game-cell="true"

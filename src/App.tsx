@@ -1,19 +1,23 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import "./App.css";
 import { GameBoard } from "./components/GameBoard/GameBoard";
 
 import { GameHeader } from "./components/GameHeader/GameHeader";
 import { GameModal } from "./components/GameModal/GameModal";
 import { GameStatus } from "./components/GameStatus/GameStatus";
-import { levels } from "./data/levels";
+import { generateHardLevel } from "./domain/levelGenerator";
 import { validateLevel } from "./domain/levelValidation";
 import { useDoubleClickCell } from "./hooks/useDoubleClickCell";
 import { useGameState } from "./hooks/useGameState";
 
-const firstLevel = levels[0];
-
 function App() {
-  const levelErrors = useMemo(() => validateLevel(firstLevel), []);
+  const [currentLevel, setCurrentLevel] = useState(() =>
+    generateHardLevel({ levelId: 1 }),
+  );
+  const levelErrors = useMemo(
+    () => validateLevel(currentLevel),
+    [currentLevel],
+  );
   const {
     gameState,
     markCell,
@@ -23,7 +27,11 @@ function App() {
     resetLevel,
     pauseGame,
     resumeGame,
-  } = useGameState(firstLevel);
+  } = useGameState(currentLevel);
+  const generateNextHardLevel = () => {
+    const nextLevelId = Number(currentLevel.levelId) + 1;
+    setCurrentLevel(generateHardLevel({ levelId: nextLevelId }));
+  };
   const handleCellInput = useDoubleClickCell({
     onSingleClick: markCell,
     onDoubleClick: validateCell,
@@ -91,7 +99,14 @@ function App() {
         <GameModal
           title="Você venceu!"
           description="Todos os gatos foram encontrados sem quebrar as regras."
-          actions={[{ label: "Jogar novamente", onClick: resetLevel }]}
+          actions={[
+            { label: "Novo hard", onClick: generateNextHardLevel },
+            {
+              label: "Jogar novamente",
+              onClick: resetLevel,
+              variant: "secondary",
+            },
+          ]}
         />
       ) : null}
 
@@ -101,6 +116,7 @@ function App() {
           description="Você ficou sem peixes. Recupere uma vida ou reinicie o nível."
           actions={[
             { label: "Continuar", onClick: recoverLife },
+            { label: "Novo hard", onClick: generateNextHardLevel },
             { label: "Reiniciar", onClick: resetLevel, variant: "secondary" },
           ]}
         />
@@ -112,6 +128,7 @@ function App() {
           description="Som e vibração entram em uma próxima versão."
           actions={[
             { label: "Continuar", onClick: resumeGame },
+            { label: "Novo hard", onClick: generateNextHardLevel },
             {
               label: "Reiniciar nível",
               onClick: resetLevel,

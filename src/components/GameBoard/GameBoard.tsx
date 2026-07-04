@@ -5,7 +5,7 @@ import {
   type PointerEvent,
 } from "react";
 import type { Cell } from "../../domain/gameTypes";
-import { getCellBorders } from "../../utils/coordinates";
+
 import { GameCell } from "../GameCell/GameCell";
 import "./GameBoard.css";
 
@@ -163,7 +163,6 @@ export function GameBoard({
             <GameCell
               cell={cell}
               disabled={disabled}
-              borders={getCellBorders(cells, cell.row, cell.column)}
               onInput={handleCellInput}
               key={`${cell.row}:${cell.column}`}
             />

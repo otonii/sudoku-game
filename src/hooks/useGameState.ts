@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   canInteractWithCell,
   countCats,
@@ -27,16 +27,13 @@ type UseGameStateResult = {
 export function useGameState(level: Level): UseGameStateResult {
   const initialCells = useMemo(() => createEmptyCells(level), [level]);
 
-  const [gameState, setGameState] = useState<GameState>(() => ({
-    level,
-    cells: initialCells,
-    status: "PLAYING",
-    previousStatus: null,
-    lives: MAX_LIVES,
-    maxLives: MAX_LIVES,
-    catsFound: 0,
-    score: 0,
-  }));
+  const [gameState, setGameState] = useState<GameState>(() =>
+    createInitialGameState(level, initialCells),
+  );
+
+  useEffect(() => {
+    setGameState(createInitialGameState(level, initialCells));
+  }, [initialCells, level]);
 
   const markCell = useCallback((row: number, column: number) => {
     setGameState((current) => {
@@ -168,16 +165,7 @@ export function useGameState(level: Level): UseGameStateResult {
   }, []);
 
   const resetLevel = useCallback(() => {
-    setGameState({
-      level,
-      cells: createEmptyCells(level),
-      status: "PLAYING",
-      previousStatus: null,
-      lives: MAX_LIVES,
-      maxLives: MAX_LIVES,
-      catsFound: 0,
-      score: 0,
-    });
+    setGameState(createInitialGameState(level, createEmptyCells(level)));
   }, [level]);
 
   const pauseGame = useCallback(() => {
@@ -218,6 +206,19 @@ export function useGameState(level: Level): UseGameStateResult {
     resetLevel,
     pauseGame,
     resumeGame,
+  };
+}
+
+function createInitialGameState(level: Level, cells: Cell[][]): GameState {
+  return {
+    level,
+    cells,
+    status: "PLAYING",
+    previousStatus: null,
+    lives: MAX_LIVES,
+    maxLives: MAX_LIVES,
+    catsFound: 0,
+    score: 0,
   };
 }
 

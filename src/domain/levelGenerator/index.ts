@@ -1,0 +1,1 @@
+export { generateHardLevel } from './hardLevelGenerator'

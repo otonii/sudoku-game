@@ -29,7 +29,7 @@
     --shadow-button: 0 8px 18px rgba(96, 68, 54, 0.14);
     --radius-lg: 18px;
     --radius-md: 12px;
-    --cell-size: clamp(48px, 13.5vw, 68px);
+    --cell-size: clamp(28px, min(8.2vw, 5.8vh), 42px);
 }
 
 * {

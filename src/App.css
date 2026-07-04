@@ -10,7 +10,7 @@
         "stage";
     grid-template-rows: auto auto 1fr;
     gap: clamp(1rem, 3vw, 1.45rem);
-    width: min(100%, 640px);
+    width: min(100%, 560px);
     min-height: 100vh;
     margin: 0 auto;
     padding: max(1.4rem, env(safe-area-inset-top))
@@ -31,9 +31,9 @@
     grid-area: rules;
     display: grid;
     grid-template-columns: 1fr 1fr 1.08fr;
-    gap: 0.55rem;
-    border-radius: var(--radius-lg);
-    padding: 0.65rem;
+    gap: 0.42rem;
+    border-radius: 14px;
+    padding: 0.45rem;
     background: var(--color-surface-strong);
     box-shadow: var(--shadow-soft);
 }
@@ -41,9 +41,9 @@
 .rule-card {
     display: grid;
     place-items: center;
-    min-height: 68px;
+    min-height: 54px;
     border-radius: 5px;
-    padding: 0.5rem;
+    padding: 0.38rem;
     color: var(--color-text);
     background: var(--color-card);
     text-align: center;
@@ -70,7 +70,7 @@
     display: grid;
     align-content: start;
     justify-items: center;
-    gap: clamp(1rem, 4vw, 1.75rem);
+    gap: clamp(0.85rem, 3vw, 1.35rem);
 }
 
 .technical-error {
@@ -90,19 +90,30 @@
     margin-top: 0.35rem;
 }
 
+@media (min-width: 600px) and (max-width: 899px) {
+    :root {
+        --cell-size: clamp(34px, min(6.4vw, 5.8vh), 48px);
+    }
+
+    .app-shell {
+        width: min(100%, 680px);
+    }
+}
+
 @media (min-width: 900px) {
     :root {
-        --cell-size: clamp(58px, 6vw, 72px);
+        --cell-size: clamp(38px, min(4.4vw, 6.2vh), 52px);
     }
 
     .app-shell {
         grid-template-areas:
             "header header"
             "rules stage";
-        grid-template-columns: minmax(220px, 280px) minmax(440px, 1fr);
+        grid-template-columns: minmax(170px, 220px) minmax(0, 1fr);
         grid-template-rows: auto 1fr;
         align-items: start;
-        width: min(100%, 1040px);
+        column-gap: clamp(1rem, 2.5vw, 2rem);
+        width: min(100%, 980px);
         padding-top: 2.5rem;
         padding-bottom: 2.5rem;
     }
@@ -111,22 +122,23 @@
         position: sticky;
         top: 2rem;
         grid-template-columns: 1fr;
-        gap: 0.75rem;
+        gap: 0.5rem;
+        padding: 0.5rem;
     }
 
     .rule-card {
-        min-height: 88px;
-        font-size: 1rem;
+        min-height: 64px;
+        font-size: 0.9rem;
     }
 
     .game-stage {
-        gap: 1.5rem;
+        gap: 1rem;
     }
 }
 
 @media (max-width: 420px) {
     :root {
-        --cell-size: clamp(44px, 13vw, 56px);
+        --cell-size: clamp(28px, min(8.1vw, 5.8vh), 38px);
     }
 
     .app-shell {
@@ -135,14 +147,14 @@
     }
 
     .rules-panel {
-        gap: 0.45rem;
-        padding: 0.5rem;
+        gap: 0.35rem;
+        padding: 0.38rem;
     }
 
     .rule-card {
-        min-height: 58px;
-        padding: 0.38rem;
-        font-size: 0.78rem;
+        min-height: 48px;
+        padding: 0.32rem;
+        font-size: 0.74rem;
     }
 
     .rule-card--touch {
