@@ -16,7 +16,7 @@
     border-radius: 12px;
     background: #ffffff;
     box-shadow: var(--shadow-soft);
-    touch-action: manipulation;
+    touch-action: none;
 }
 
 @media (max-width: 420px) {

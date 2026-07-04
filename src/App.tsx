@@ -17,6 +17,7 @@ function App() {
   const {
     gameState,
     markCell,
+    markCellNote,
     validateCell,
     recoverLife,
     resetLevel,
@@ -82,6 +83,7 @@ function App() {
           cells={gameState.cells}
           disabled={isBoardDisabled}
           onCellInput={handleCellInput}
+          onCellDragMark={markCellNote}
         />
       </section>
 
