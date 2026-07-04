@@ -15,7 +15,7 @@ const REVEAL_SCORE = 50;
 type UseGameStateResult = {
   gameState: GameState;
   markCell: (row: number, column: number) => void;
-  markCellNote: (row: number, column: number) => void;
+  markCellNote: (row: number, column: number, mode?: "mark" | "unmark") => void;
   validateCell: (row: number, column: number) => void;
   revealRandomCat: () => void;
   recoverLife: () => void;
@@ -56,24 +56,44 @@ export function useGameState(level: Level): UseGameStateResult {
     });
   }, []);
 
-  const markCellNote = useCallback((row: number, column: number) => {
-    setGameState((current) => {
-      if (current.status !== "PLAYING") {
-        return current;
-      }
+  const markCellNote = useCallback(
+    (row: number, column: number, mode: "mark" | "unmark" = "mark") => {
+      setGameState((current) => {
+        if (current.status !== "PLAYING") {
+          return current;
+        }
 
-      const cell = current.cells[row]?.[column];
+        const cell = current.cells[row]?.[column];
 
-      if (!cell || cell.state !== "VAZIA") {
-        return current;
-      }
+        if (!cell) {
+          return current;
+        }
 
-      return {
-        ...current,
-        cells: updateCell(current.cells, row, column, { state: "X_BRANCO" }),
-      };
-    });
-  }, []);
+        if (mode === "mark") {
+          if (cell.state !== "VAZIA") {
+            return current;
+          }
+
+          return {
+            ...current,
+            cells: updateCell(current.cells, row, column, {
+              state: "X_BRANCO",
+            }),
+          };
+        }
+
+        if (cell.state !== "X_BRANCO") {
+          return current;
+        }
+
+        return {
+          ...current,
+          cells: updateCell(current.cells, row, column, { state: "VAZIA" }),
+        };
+      });
+    },
+    [],
+  );
 
   const validateCell = useCallback((row: number, column: number) => {
     setGameState((current) => {

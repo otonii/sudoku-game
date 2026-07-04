@@ -21,7 +21,7 @@ export const levels: Level[] = [
       },
       {
         regionId: 1,
-        color: "#a9d88b",
+        color: "#8fc7e8",
         cells: [
           [0, 3],
           [0, 4],

@@ -138,7 +138,8 @@ O gerador:
 4. expande regiões por flood fill ortogonal;
 5. força exatamente 4 regiões concentradas;
 6. garante que pelo menos duas regiões concentradas compartilham linha ou coluna;
-7. valida o resultado com `validateLevel`.
+7. aplica um filtro de qualidade para manter as regiões iniciais compactas e exigir que as demais toquem mais linhas e colunas;
+8. valida o resultado com `validateLevel`.
 
 ## Validação de nível
 

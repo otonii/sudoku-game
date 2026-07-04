@@ -8,10 +8,16 @@ const REGION_MIN_CELLS = 3;
 const REGION_MAX_CELLS = HARD_GRID_SIZE * 2 - 2;
 const MIN_STARTER_REGIONS = 4;
 const MAX_STARTER_REGIONS = 4;
+const MIN_NON_STARTER_TRACK_COVERAGE = 3;
+const MIN_NON_STARTER_SPREAD_SCORE = 5;
+const MIN_QUALIFIED_NON_STARTER_REGIONS = 4;
+const MAX_STARTER_SPREAD_SCORE = 4;
+const MAX_STARTER_TRACK_COVERAGE = 2;
+const EXPLORATORY_PICK_CHANCE = 0.72;
 
 const HARD_REGION_COLORS = [
   "#6bb9b7",
-  "#a9d88b",
+  "#8fc7e8",
   "#a8784e",
   "#c85578",
   "#d6843d",
@@ -43,6 +49,26 @@ export function generateHardLevel({
   levelId,
   maxAttempts = HARD_MAX_ATTEMPTS,
 }: GenerateHardLevelOptions): Level {
+  const preferredLevel = tryGenerateHardLevel(levelId, maxAttempts, true);
+
+  if (preferredLevel) {
+    return preferredLevel;
+  }
+
+  const fallbackLevel = tryGenerateHardLevel(levelId, maxAttempts, false);
+
+  if (fallbackLevel) {
+    return fallbackLevel;
+  }
+
+  throw new Error("Não foi possível gerar um nível hard válido.");
+}
+
+function tryGenerateHardLevel(
+  levelId: number | string,
+  maxAttempts: number,
+  enforceBalancedDifficulty: boolean,
+): Level | null {
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
     const solution = generateHardSolution();
     const starterRegions = generateStarterRegions(solution);
@@ -60,12 +86,19 @@ export function generateHardLevel({
       solution,
     };
 
-    if (validateLevel(level).length === 0 && hasExpectedStarterRegions(level)) {
+    if (validateLevel(level).length > 0 || !hasExpectedStarterRegions(level)) {
+      continue;
+    }
+
+    if (
+      !enforceBalancedDifficulty ||
+      hasBalancedRegionDifficulty(level, starterRegions)
+    ) {
       return level;
     }
   }
 
-  throw new Error("Não foi possível gerar um nível hard válido.");
+  return null;
 }
 
 function generateHardSolution(): Coordinate[] {
@@ -363,7 +396,10 @@ function pickWeightedHardCandidate(
     increasesRegionSpread(candidate, regionCells[candidate.regionId]),
   );
 
-  if (exploratoryCandidates.length > 0 && Math.random() < 0.72) {
+  if (
+    exploratoryCandidates.length > 0 &&
+    Math.random() < EXPLORATORY_PICK_CHANCE
+  ) {
     return pickRandom(exploratoryCandidates);
   }
 
@@ -382,6 +418,67 @@ function increasesRegionSpread(
     candidate.row > Math.max(...rows) ||
     candidate.column < Math.min(...columns) ||
     candidate.column > Math.max(...columns)
+  );
+}
+
+function hasBalancedRegionDifficulty(
+  level: Level,
+  starterRegions: StarterRegion[],
+): boolean {
+  const starterRegionIds = new Set(
+    starterRegions.map(({ regionId }) => regionId),
+  );
+  const starters = level.regions.filter(({ regionId }) =>
+    starterRegionIds.has(Number(regionId)),
+  );
+  const nonStarters = level.regions.filter(
+    ({ regionId }) => !starterRegionIds.has(Number(regionId)),
+  );
+
+  if (starters.length !== MIN_STARTER_REGIONS || nonStarters.length === 0) {
+    return false;
+  }
+
+  const starterRegionsAreCompact = starters.every((region) =>
+    isCompactStarterRegion(region.cells),
+  );
+  const qualifiedNonStarters = nonStarters.filter(
+    (region) =>
+      getRegionSpreadScore(region.cells) >= MIN_NON_STARTER_SPREAD_SCORE &&
+      touchesEnoughTracks(region.cells),
+  );
+
+  return (
+    starterRegionsAreCompact &&
+    qualifiedNonStarters.length >= MIN_QUALIFIED_NON_STARTER_REGIONS
+  );
+}
+
+function getRegionSpreadScore(cells: Coordinate[]): number {
+  const rows = new Set(cells.map(([row]) => row));
+  const columns = new Set(cells.map(([, column]) => column));
+
+  return rows.size + columns.size;
+}
+
+function isCompactStarterRegion(cells: Coordinate[]): boolean {
+  const rows = new Set(cells.map(([row]) => row));
+  const columns = new Set(cells.map(([, column]) => column));
+
+  return (
+    getRegionSpreadScore(cells) <= MAX_STARTER_SPREAD_SCORE &&
+    (rows.size <= MAX_STARTER_TRACK_COVERAGE ||
+      columns.size <= MAX_STARTER_TRACK_COVERAGE)
+  );
+}
+
+function touchesEnoughTracks(cells: Coordinate[]): boolean {
+  const rows = new Set(cells.map(([row]) => row));
+  const columns = new Set(cells.map(([, column]) => column));
+
+  return (
+    rows.size >= MIN_NON_STARTER_TRACK_COVERAGE &&
+    columns.size >= MIN_NON_STARTER_TRACK_COVERAGE
   );
 }
 

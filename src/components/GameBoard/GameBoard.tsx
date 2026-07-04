@@ -4,7 +4,7 @@ import {
   type CSSProperties,
   type PointerEvent,
 } from "react";
-import type { Cell } from "../../domain/gameTypes";
+import type { Cell, CellState } from "../../domain/gameTypes";
 
 import { GameCell } from "../GameCell/GameCell";
 import "./GameBoard.css";
@@ -13,7 +13,11 @@ type GameBoardProps = {
   cells: Cell[][];
   disabled: boolean;
   onCellInput: (row: number, column: number) => void;
-  onCellDragMark: (row: number, column: number) => void;
+  onCellDragMark: (
+    row: number,
+    column: number,
+    mode: "mark" | "unmark",
+  ) => void;
 };
 
 type DragCell = {
@@ -26,6 +30,7 @@ type DragState = {
   start: DragCell | null;
   lastKey: string | null;
   didDrag: boolean;
+  mode: "mark" | "unmark" | null;
 };
 
 const initialDragState: DragState = {
@@ -33,6 +38,7 @@ const initialDragState: DragState = {
   start: null,
   lastKey: null,
   didDrag: false,
+  mode: null,
 };
 
 export function GameBoard({
@@ -84,16 +90,17 @@ export function GameBoard({
         start: cell,
         lastKey: toCellKey(cell),
         didDrag: false,
+        mode: getDragMode(cells[cell.row]?.[cell.column]?.state),
       };
     },
-    [disabled, getCellFromPointer],
+    [cells, disabled, getCellFromPointer],
   );
 
   const handlePointerMove = useCallback(
     (event: PointerEvent<HTMLDivElement>) => {
       const drag = dragRef.current;
 
-      if (disabled || !drag.active || !drag.start) {
+      if (disabled || !drag.active || !drag.start || !drag.mode) {
         return;
       }
 
@@ -110,10 +117,10 @@ export function GameBoard({
       }
 
       if (!drag.didDrag) {
-        onCellDragMark(drag.start.row, drag.start.column);
+        onCellDragMark(drag.start.row, drag.start.column, drag.mode);
       }
 
-      onCellDragMark(cell.row, cell.column);
+      onCellDragMark(cell.row, cell.column, drag.mode);
       dragRef.current = {
         ...drag,
         lastKey: key,
@@ -175,4 +182,16 @@ export function GameBoard({
 
 function toCellKey(cell: DragCell): string {
   return `${cell.row}:${cell.column}`;
+}
+
+function getDragMode(state?: CellState): "mark" | "unmark" | null {
+  if (state === "VAZIA") {
+    return "mark";
+  }
+
+  if (state === "X_BRANCO") {
+    return "unmark";
+  }
+
+  return null;
 }

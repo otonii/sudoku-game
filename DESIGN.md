@@ -67,7 +67,7 @@ O container branco deve ser compacto. Os cards internos usam fundo bege claro.
 
 O status usa pills brancas:
 
-- contador de gatos em verde;
+- contador de gatos em azul;
 - vidas com ícones de peixe.
 
 ## Tabuleiro
