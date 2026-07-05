@@ -73,6 +73,29 @@ src/
 - [Contribuição](./CONTRIBUTING.md)
 - [Instruções para agentes](./AGENTS.md)
 
+## Publicação no GitHub Pages
+
+Repositório esperado:
+
+```text
+git@github.com:otonii/sudoku-game.git
+```
+
+O projeto já está configurado para publicar em GitHub Pages via GitHub Actions.
+
+Passos:
+
+1. criar o repositório `sudoku-game` no GitHub;
+2. apontar o remoto local para `git@github.com:otonii/sudoku-game.git`;
+3. fazer push da branch `main`;
+4. em `Settings > Pages`, selecionar `GitHub Actions` como source.
+
+URL esperada após o deploy:
+
+```text
+https://otonii.github.io/sudoku-game/
+```
+
 ## Estado atual
 
 O projeto é frontend-only. Não há backend, persistência, autenticação, analytics, anúncios reais ou testes automatizados configurados no momento.
