@@ -1,19 +1,17 @@
 import { validateLevel } from "../levelValidation";
-import { isConcentratedStarterRegion } from "../regionGeometry";
 import type { Coordinate, Level, Region } from "../gameTypes";
 
 const HARD_GRID_SIZE = 10;
 const HARD_MAX_ATTEMPTS = 700;
-const REGION_MIN_CELLS = 3;
 const REGION_MAX_CELLS = HARD_GRID_SIZE * 2 - 2;
-const MIN_STARTER_REGIONS = 4;
-const MAX_STARTER_REGIONS = 4;
+const MIN_STARTER_REGIONS = 6;
 const MIN_NON_STARTER_TRACK_COVERAGE = 3;
 const MIN_NON_STARTER_SPREAD_SCORE = 5;
-const MIN_QUALIFIED_NON_STARTER_REGIONS = 4;
 const MAX_STARTER_SPREAD_SCORE = 4;
 const MAX_STARTER_TRACK_COVERAGE = 2;
 const EXPLORATORY_PICK_CHANCE = 0.72;
+const MICRO_REGION_MAX_COUNT = 2;
+const MICRO_REGION_ONE_CELL_CHANCE = 0.25;
 
 const HARD_REGION_COLORS = [
   "#6bb9b7",
@@ -45,36 +43,70 @@ type StarterRegion = {
   allowedTracks?: readonly [number, number];
 };
 
+type RegionPlan = {
+  starterRegionIds: Set<number>;
+  microRegionTargets: Map<number, number>;
+};
+
+type GenerationDebugStats = {
+  regionGrowthFailed: number;
+  noCandidatesLeft: number;
+  levelValidationFailed: number;
+  starterValidationFailed: number;
+  balancedDifficultyFailed: number;
+};
+
 export function generateHardLevel({
   levelId,
   maxAttempts = HARD_MAX_ATTEMPTS,
 }: GenerateHardLevelOptions): Level {
-  const preferredLevel = tryGenerateHardLevel(levelId, maxAttempts, true);
+  const preferredStats = createGenerationDebugStats();
+  const preferredLevel = tryGenerateHardLevel(
+    levelId,
+    maxAttempts,
+    true,
+    preferredStats,
+  );
 
   if (preferredLevel) {
     return preferredLevel;
   }
 
-  const fallbackLevel = tryGenerateHardLevel(levelId, maxAttempts, false);
+  const fallbackStats = createGenerationDebugStats();
+  const fallbackLevel = tryGenerateHardLevel(
+    levelId,
+    maxAttempts,
+    false,
+    fallbackStats,
+  );
 
   if (fallbackLevel) {
     return fallbackLevel;
   }
 
-  throw new Error("Não foi possível gerar um nível hard válido.");
+  throw new Error(
+    [
+      "Não foi possível gerar um nível hard válido.",
+      `preferred: growth=${preferredStats.regionGrowthFailed}, noCandidates=${preferredStats.noCandidatesLeft}, validation=${preferredStats.levelValidationFailed}, starter=${preferredStats.starterValidationFailed}, difficulty=${preferredStats.balancedDifficultyFailed}`,
+      `fallback: growth=${fallbackStats.regionGrowthFailed}, noCandidates=${fallbackStats.noCandidatesLeft}, validation=${fallbackStats.levelValidationFailed}, starter=${fallbackStats.starterValidationFailed}, difficulty=${fallbackStats.balancedDifficultyFailed}`,
+    ].join(" "),
+  );
 }
 
 function tryGenerateHardLevel(
   levelId: number | string,
   maxAttempts: number,
   enforceBalancedDifficulty: boolean,
+  debugStats: GenerationDebugStats,
 ): Level | null {
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
     const solution = generateHardSolution();
     const starterRegions = generateStarterRegions(solution);
-    const regions = generateHardRegions(solution, starterRegions);
+    const regionPlan = createRegionPlan(starterRegions);
+    const regions = generateHardRegions(solution, starterRegions, regionPlan);
 
     if (!regions) {
+      debugStats.noCandidatesLeft += 1;
       continue;
     }
 
@@ -86,16 +118,26 @@ function tryGenerateHardLevel(
       solution,
     };
 
-    if (validateLevel(level).length > 0 || !hasExpectedStarterRegions(level)) {
+    if (!hasExpectedStarterRegions(regions, starterRegions)) {
+      debugStats.starterValidationFailed += 1;
       continue;
     }
 
-    if (
-      !enforceBalancedDifficulty ||
-      hasBalancedRegionDifficulty(level, starterRegions)
-    ) {
+    const levelErrors = validateLevel(level);
+    if (levelErrors.length > 0) {
+      debugStats.levelValidationFailed += 1;
+      continue;
+    }
+
+    if (!enforceBalancedDifficulty) {
       return level;
     }
+
+    if (hasBalancedRegionDifficulty(level, starterRegions)) {
+      return level;
+    }
+
+    debugStats.balancedDifficultyFailed += 1;
   }
 
   return null;
@@ -119,6 +161,7 @@ function generateHardSolution(): Coordinate[] {
 function generateHardRegions(
   solution: Coordinate[],
   starterRegions: StarterRegion[],
+  regionPlan: RegionPlan,
 ): Region[] | null {
   const owners = createEmptyOwnerGrid();
   const regionCells = solution.map((cell, regionId) => {
@@ -127,7 +170,7 @@ function generateHardRegions(
     return [cell];
   });
 
-  if (!growRegionsToMinimum(owners, regionCells, starterRegions)) {
+  if (!growRegionsToTargets(owners, regionCells, starterRegions, regionPlan)) {
     return null;
   }
 
@@ -136,6 +179,8 @@ function generateHardRegions(
       owners,
       regionCells,
       starterRegions,
+      regionPlan,
+      false,
     );
 
     if (candidates.length === 0) {
@@ -150,21 +195,26 @@ function generateHardRegions(
     regionId,
     color: HARD_REGION_COLORS[regionId % HARD_REGION_COLORS.length],
     cells,
+    category: regionPlan.microRegionTargets.has(regionId) ? "MICRO" : undefined,
   }));
 }
 
-function growRegionsToMinimum(
+function growRegionsToTargets(
   owners: number[][],
   regionCells: Coordinate[][],
   starterRegions: StarterRegion[],
+  regionPlan: RegionPlan,
 ): boolean {
   for (let regionId = 0; regionId < regionCells.length; regionId += 1) {
-    while (regionCells[regionId].length < REGION_MIN_CELLS) {
+    const targetSize = getRegionTargetSize(regionId, regionPlan);
+
+    while (regionCells[regionId].length < targetSize) {
       const candidates = collectGrowthCandidatesForRegion(
         owners,
         regionCells,
         regionId,
         starterRegions,
+        true,
       );
 
       if (candidates.length === 0) {
@@ -182,9 +232,13 @@ function collectGrowthCandidates(
   owners: number[][],
   regionCells: Coordinate[][],
   starterRegions: StarterRegion[],
+  regionPlan: RegionPlan,
+  enforceStarterConstraint: boolean,
 ): OwnedCell[] {
   return regionCells.flatMap((cells, regionId) => {
-    if (cells.length >= REGION_MAX_CELLS) {
+    const maxCells = getRegionMaxSize(regionId, regionPlan);
+
+    if (cells.length >= maxCells) {
       return [];
     }
 
@@ -193,6 +247,7 @@ function collectGrowthCandidates(
       regionCells,
       regionId,
       starterRegions,
+      enforceStarterConstraint,
     );
   });
 }
@@ -202,6 +257,7 @@ function collectGrowthCandidatesForRegion(
   regionCells: Coordinate[][],
   regionId: number,
   starterRegions: StarterRegion[],
+  enforceStarterConstraint: boolean,
 ): OwnedCell[] {
   const seen = new Set<string>();
   const candidates: OwnedCell[] = [];
@@ -224,6 +280,7 @@ function collectGrowthCandidatesForRegion(
       const candidate = { row: nextRow, column: nextColumn, regionId };
 
       if (
+        enforceStarterConstraint &&
         !matchesStarterRegionConstraint(
           candidate,
           regionCells[regionId],
@@ -239,6 +296,69 @@ function collectGrowthCandidatesForRegion(
   }
 
   return candidates;
+}
+
+function createRegionPlan(starterRegions: StarterRegion[]): RegionPlan {
+  const starterRegionIds = new Set(
+    starterRegions.map(({ regionId }) => regionId),
+  );
+  const microRegionTargets = pickMicroRegionTargets(starterRegionIds);
+
+  return {
+    starterRegionIds,
+    microRegionTargets,
+  };
+}
+
+function pickMicroRegionTargets(
+  starterRegionIds: Set<number>,
+): Map<number, number> {
+  const eligibleRegionIds = shuffle(
+    Array.from({ length: HARD_GRID_SIZE }, (_, regionId) => regionId).filter(
+      (regionId) => !starterRegionIds.has(regionId),
+    ),
+  );
+  const microRegionCount = Math.min(
+    eligibleRegionIds.length,
+    MICRO_REGION_MAX_COUNT,
+  );
+  const selectedRegionIds = eligibleRegionIds.slice(0, microRegionCount);
+  const microTargets = selectedRegionIds.map((regionId, index) => {
+    if (index === 0) {
+      return [regionId, 2] as const;
+    }
+
+    return [
+      regionId,
+      Math.random() < MICRO_REGION_ONE_CELL_CHANCE ? 1 : 3,
+    ] as const;
+  });
+
+  return new Map(microTargets);
+}
+
+function getRegionTargetSize(regionId: number, regionPlan: RegionPlan): number {
+  const microTarget = regionPlan.microRegionTargets.get(regionId);
+
+  if (microTarget !== undefined) {
+    return microTarget;
+  }
+
+  if (regionPlan.starterRegionIds.has(regionId)) {
+    return 1;
+  }
+
+  return 1;
+}
+
+function getRegionMaxSize(regionId: number, regionPlan: RegionPlan): number {
+  const microTarget = regionPlan.microRegionTargets.get(regionId);
+
+  if (microTarget !== undefined) {
+    return microTarget;
+  }
+
+  return REGION_MAX_CELLS;
 }
 
 function generateStarterRegions(solution: Coordinate[]): StarterRegion[] {
@@ -319,13 +439,20 @@ function findAdjacentColumnRegionPairs(
   }).filter((pair) => pair !== null);
 }
 
-function hasExpectedStarterRegions(level: Level): boolean {
-  const starterRegions = level.regions.filter(isConcentratedStarterRegion);
+function hasExpectedStarterRegions(
+  regions: Region[],
+  starterRegions: StarterRegion[],
+): boolean {
+  const starterRegionIds = new Set(
+    starterRegions.map(({ regionId }) => regionId),
+  );
+  const plannedStarters = regions.filter(({ regionId }) =>
+    starterRegionIds.has(Number(regionId)),
+  );
 
   return (
-    starterRegions.length >= MIN_STARTER_REGIONS &&
-    starterRegions.length <= MAX_STARTER_REGIONS &&
-    hasSharedStarterTrack(starterRegions)
+    plannedStarters.length === MIN_STARTER_REGIONS &&
+    hasSharedStarterTrack(plannedStarters)
   );
 }
 
@@ -432,7 +559,8 @@ function hasBalancedRegionDifficulty(
     starterRegionIds.has(Number(regionId)),
   );
   const nonStarters = level.regions.filter(
-    ({ regionId }) => !starterRegionIds.has(Number(regionId)),
+    ({ regionId, category }) =>
+      !starterRegionIds.has(Number(regionId)) && category !== "MICRO",
   );
 
   if (starters.length !== MIN_STARTER_REGIONS || nonStarters.length === 0) {
@@ -448,10 +576,7 @@ function hasBalancedRegionDifficulty(
       touchesEnoughTracks(region.cells),
   );
 
-  return (
-    starterRegionsAreCompact &&
-    qualifiedNonStarters.length >= MIN_QUALIFIED_NON_STARTER_REGIONS
-  );
+  return starterRegionsAreCompact && qualifiedNonStarters.length >= 3;
 }
 
 function getRegionSpreadScore(cells: Coordinate[]): number {
@@ -553,4 +678,14 @@ function shuffle<T>(items: T[]): T[] {
 
 function pickRandom<T>(items: T[]): T {
   return items[Math.floor(Math.random() * items.length)];
+}
+
+function createGenerationDebugStats(): GenerationDebugStats {
+  return {
+    regionGrowthFailed: 0,
+    noCandidatesLeft: 0,
+    levelValidationFailed: 0,
+    starterValidationFailed: 0,
+    balancedDifficultyFailed: 0,
+  };
 }

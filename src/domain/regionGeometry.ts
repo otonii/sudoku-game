@@ -2,6 +2,7 @@ import type { Level, Region } from "./gameTypes";
 
 const MAX_REGION_LINE_SHARE = 0.6;
 const MIN_REGION_CELLS = 3;
+const MICRO_REGION_MAX_CELLS = 3;
 
 export function validateRegionGeometry(level: Level): string[] {
   return [
@@ -16,6 +17,16 @@ export function validateRegionSize(level: Level): string[] {
 
   return level.regions.flatMap((region) => {
     const errors: string[] = [];
+
+    if (region.category === "MICRO") {
+      if (region.cells.length > MICRO_REGION_MAX_CELLS) {
+        errors.push(
+          `Região micro ${region.regionId} tem mais de ${MICRO_REGION_MAX_CELLS} células.`,
+        );
+      }
+
+      return errors;
+    }
 
     if (region.cells.length < MIN_REGION_CELLS) {
       errors.push(
@@ -35,6 +46,9 @@ export function validateRegionLinearity(level: Level): string[] {
   const limit = Math.floor(level.gridSize * MAX_REGION_LINE_SHARE);
 
   return level.regions.flatMap((region) => {
+    if (region.category === "MICRO") {
+      return [];
+    }
     const rowCounts = new Map<number, number>();
     const columnCounts = new Map<number, number>();
 
@@ -79,6 +93,10 @@ export function isPerfectRectangleRegion(region: Region): boolean {
 }
 
 export function isConcentratedStarterRegion(region: Region): boolean {
+  if (region.category === "MICRO") {
+    return false;
+  }
+
   const rows = new Set(region.cells.map(([row]) => row));
   const columns = new Set(region.cells.map(([, column]) => column));
 
@@ -89,6 +107,7 @@ function validateRegionShapes(level: Level): string[] {
   return level.regions
     .filter(
       (region) =>
+        region.category !== "MICRO" &&
         isPerfectRectangleRegion(region) &&
         !isConcentratedStarterRegion(region),
     )

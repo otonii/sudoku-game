@@ -364,9 +364,9 @@ NÍVEL DIFÍCIL: regiões longas, entrelaçadas e sinuosas.
 
 #### Níveis fáceis
 
-Recomendado para grids `6 x 6` ou menores.
+Fora do escopo do produto atual.
 
-Características:
+Características esperadas, caso voltem a existir no futuro:
 
 - Regiões compactas.
 - Formatos próximos de peças de Tetris.
@@ -382,7 +382,8 @@ Características:
 
 - Regiões sinuosas.
 - Regiões que se entrelaçam ou abraçam outras regiões.
-- Exatamente 4 regiões concentradas para criar pontos iniciais de dedução.
+- O gerador planeja 6 regiões iniciais de referência para criar mais pontos iniciais de dedução.
+- Exatamente 2 regiões micro aparecem no hard, sempre contendo 1 gato; o gerador garante uma com 2 células, e a outra tende a ser maior, com baixa chance de ficar em 1 célula.
 - Pelo menos 2 regiões concentradas devem compartilhar linha ou coluna.
 - Uma mesma região pode passar por 4 ou 5 linhas/colunas diferentes.
 - O jogador precisa cruzar informações de múltiplas regiões antes de usar o clique duplo.
@@ -531,7 +532,7 @@ Ao aplicar `X_VERMELHO`:
 - Regiões em formato de retângulo perfeito são rejeitadas, exceto quando forem regiões concentradas intencionais.
 - Níveis fáceis priorizam regiões compactas.
 - Níveis difíceis priorizam regiões sinuosas e entrelaçadas.
-- Níveis hard possuem exatamente 4 regiões concentradas.
+- Níveis hard possuem exatamente 6 regiões concentradas.
 - Em níveis hard, pelo menos 2 regiões concentradas compartilham linha ou coluna.
 
 ## 15. Fora de escopo inicial

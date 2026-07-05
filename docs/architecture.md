@@ -132,14 +132,16 @@ Arquivo principal: `src/domain/levelGenerator/hardLevelGenerator.ts`.
 
 O gerador:
 
-1. cria uma solução `10x10` com uma permutação de colunas;
+1. sorteia uma solução `10x10` com uma permutação de colunas;
 2. rejeita soluções com gatos adjacentes;
-3. usa cada gato como semente de uma região;
-4. expande regiões por flood fill ortogonal;
-5. força exatamente 4 regiões concentradas;
-6. garante que pelo menos duas regiões concentradas compartilham linha ou coluna;
-7. aplica um filtro de qualidade para manter as regiões iniciais compactas e exigir que as demais toquem mais linhas e colunas;
-8. valida o resultado com `validateLevel`.
+3. sorteia entre 2 e 3 regiões micro e define seus tamanhos entre 1 e 3 células;
+4. força exatamente 6 regiões concentradas;
+5. usa cada gato como semente de uma região;
+6. aplica a restrição das regiões concentradas só no crescimento inicial;
+7. preenche o restante do grid por flood fill ortogonal;
+8. garante que as regiões iniciais planejadas preservem ao menos um compartilhamento de linha ou coluna na geometria final;
+9. aplica um filtro de qualidade para manter as regiões iniciais compactas e exigir que as demais toquem mais linhas e colunas;
+10. valida o resultado com `validateLevel`.
 
 ## Validação de nível
 

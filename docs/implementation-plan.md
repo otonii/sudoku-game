@@ -158,8 +158,8 @@ export const levels: Level[] = [
 
 Critérios para o primeiro nível:
 
-- Usar grid pequeno `6 x 6`.
-- Garantir 6 regiões.
+- Não usar mais grids pequenos `4 x 4` ou `6 x 6` no produto atual.
+- Manter foco no grid hard `10 x 10`.
 - Garantir 6 gatos na solução.
 - Validar manualmente as regras antes de implementar geração procedural.
 
